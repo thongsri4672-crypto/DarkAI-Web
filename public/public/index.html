@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DarkAI — Unfiltered AI</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#090b10;
+  color:#eef2f7
+}
+
+body{
+  display:flex;
+  overflow:hidden
+}
+
+.app{
+  display:grid;
+  grid-template-columns:260px 1fr;
+  width:100vw;
+  height:100vh
+}
+
+.sidebar{
+  border-right:1px solid #1c222c;
+  background:#0d1016;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:14px
+}
+
+.brand{
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:.4px
+}
+
+.muted{
+  color:#8d97a5;
+  font-size:13px
+}
+
+.btn{
+  border:1px solid #252d38;
+  background:#121722;
+  color:#eef2f7;
+  border-radius:12px;
+  padding:11px 13px;
+  cursor:pointer
+}
+
+.btn:hover{
+  background:#171d29
+}
+
+.new{
+  width:100%;
+  font-weight:700
+}
+
+.preset{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin-top:8px
+}
+
+.preset button{
+  text-align:left
+}
+
+.sidefoot{
+  margin-top:auto;
+  color:#677180;
+  font-size:12px;
+  line-height:1.5
+}
+
+.main{
+  min-width:0;
+  display:flex;
+  flex-direction:column
+}
+
+.topbar{
+  height:64px;
+  border-bottom:1px solid #1c222c;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 22px;
+  background:#0b0e14
+}
+
+.mode{
+  display:flex;
+  align-items:center;
+  gap:8px
+}
+
+.mode select{
+  background:#121722;
+  color:#eef2f7;
+  border:1px solid #2a3340;
+  border-radius:10px;
+  padding:8px 10px
+}
+
+.chat{
+  flex:1;
+  overflow:auto;
+  padding:28px 18px 130px
+}
+
+.inner{
+  max-width:920px;
+  margin:0 auto
+}
+
+.welcome{
+  text-align:center;
+  padding:9vh 0 20px
+}
+
+.welcome h1{
+  font-size:42px;
+  margin:0 0 10px
+}
+
+.welcome p{
+  color:#98a2b0;
+  margin:0
+}
+
+.messages{
+  display:flex;
+  flex-direction:column;
+  gap:14px
+}
+
+.msg{
+  display:flex
+}
+
+.msg.user{
+  justify-content:flex-end
+}
+
+.bubble{
+  max-width:min(78%,760px);
+  padding:13px 15px;
+  border-radius:16px;
+  border:1px solid #252d38;
+  background:#111620;
+  white-space:pre-wrap;
+  line-height:1.5
+}
+
+.msg.user .bubble{
+  background:#171d29
+}
+
+.role{
+  font-size:11px;
+  color:#737d8b;
+  margin-bottom:5px;
+  text-transform:uppercase;
+  letter-spacing:.08em
+}
+
+.composerWrap{
+  position:fixed;
+  left:260px;
+  right:0;
+  bottom:0;
+  padding:18px;
+  background:linear-gradient(transparent,#090b10 28%)
+}
+
+.composer{
+  max-width:920px;
+  margin:0 auto;
+  display:flex;
+  gap:10px;
+  background:#10151e;
+  border:1px solid #2a3340;
+  border-radius:16px;
+  padding:10px
+}
+
+textarea{
+  flex:1;
+  resize:none;
+  min-height:50px;
+  max-height:180px;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#eef2f7;
+  padding:8px;
+  font:inherit
+}
+
+.send{
+  padding:0 18px;
+  font-weight:800
+}
+
+@media(max-width:760px){
+  .app{
+    grid-template-columns:1fr
+  }
+
+  .sidebar{
+    display:none
+  }
+
+  .composerWrap{
+    left:0
+  }
+
+  .welcome h1{
+    font-size:32px
+  }
+
+  .bubble{
+    max-width:90%
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<aside class="sidebar">
+
+<div class="brand">DARKAI</div>
+
+<div class="muted">
+Direct AI workspace
+</div>
+
+<button class="btn new" onclick="newChat()">
+＋ New chat
+</button>
+
+<div class="preset">
+
+<button class="btn"
+onclick="usePreset('Explain this like a senior engineer.')">
+Developer
+</button>
+
+<button class="btn"
+onclick="usePreset('Give me three creative solutions with tradeoffs.')">
+Creative
+</button>
+
+<button class="btn"
+onclick="usePreset('Turn this idea into a realistic business plan.')">
+Business
+</button>
+
+</div>
+
+<div class="sidefoot">
+Free-form conversations, writing, coding, analysis and roleplay.
+</div>
+
+</aside>
+
+<main class="main">
+
+<header class="topbar">
+
+<div>AI Chat</div>
+
+<div class="mode">
+
+<span class="muted">Mode</span>
+
+<select id="mode">
+<option value="balanced">Balanced</option>
+<option value="creative">Creative</option>
+<option value="developer">Developer</option>
+<option value="business">Business</option>
+</select>
+
+</div>
+
+</header>
+
+<section class="chat" id="chat">
+
+<div class="inner">
+
+<div class="welcome" id="welcome">
+
+<h1>DarkAI</h1>
+
+<p>
+Ask anything. Get a direct, useful answer.
+</p>
+
+</div>
+
+<div class="messages" id="messages"></div>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+<div class="composerWrap">
+
+<div class="composer">
+
+<textarea
+id="prompt"
+placeholder="Message DarkAI…"
+onkeydown="handleKey(event)"
+></textarea>
+
+<button
+class="btn send"
+onclick="sendMessage()"
+>
+Send
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+let history=[];
+
+const promptEl=document.getElementById("prompt");
+const messagesEl=document.getElementById("messages");
+const welcomeEl=document.getElementById("welcome");
+const modeEl=document.getElementById("mode");
+
+function addMessage(role,text){
+
+welcomeEl.style.display="none";
+
+const wrap=document.createElement("div");
+
+wrap.className="msg "+role;
+
+const bubble=document.createElement("div");
+
+bubble.className="bubble";
+
+bubble.innerHTML=
+'<div class="role">'+
+(role==="user"?"You":"DarkAI")+
+'</div>'+
+escapeHtml(text);
+
+wrap.appendChild(bubble);
+
+messagesEl.appendChild(wrap);
+
+document.getElementById("chat").scrollTop=
+document.getElementById("chat").scrollHeight;
+}
+
+function escapeHtml(s){
+
+return String(s).replace(
+/[&<>"']/g,
+m=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[m])
+);
+
+}
+
+function usePreset(t){
+
+promptEl.value=t;
+promptEl.focus();
+
+}
+
+function newChat(){
+
+history=[];
+messagesEl.innerHTML="";
+welcomeEl.style.display="block";
+promptEl.value="";
+promptEl.focus();
+
+}
+
+function handleKey(e){
+
+if(e.key==="Enter"&&!e.shiftKey){
+
+e.preventDefault();
+sendMessage();
+
+}
+
+}
+
+async function sendMessage(){
+
+const prompt=promptEl.value.trim();
+
+if(!prompt)return;
+
+addMessage("user",prompt);
+
+history.push({
+role:"user",
+parts:[{text:prompt}]
+});
+
+promptEl.value="";
+
+try{
+
+const r=await fetch("/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+prompt,
+mode:modeEl.value,
+contents:history
+
+})
+
+});
+
+const data=await r.json();
+
+if(!r.ok){
+
+throw new Error(
+data.error||"Request failed"
+);
+
+}
+
+addMessage("model",data.text);
+
+history.push({
+
+role:"model",
+
+parts:[{
+text:data.text
+}]
+
+});
+
+}catch(e){
+
+addMessage(
+"model",
+"Error: "+e.message
+);
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
